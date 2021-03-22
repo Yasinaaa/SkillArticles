@@ -4,18 +4,31 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import ru.skillbranch.sbdelivery.domain.entity.DishEntity
 import ru.skillbranch.sbdelivery.repository.DishesRepositoryContract
+import ru.skillbranch.sbdelivery.repository.error.EmptyDishesError
 import java.util.*
 
 class SearchUseCaseImpl(private val repository: DishesRepositoryContract) : SearchUseCase {
 
-    override fun getDishes(): Single<List<DishEntity>> = repository.getCachedDishes()
+    override fun getDishes(): Single<List<DishEntity>> =
+        repository.getCachedDishes()
+            .doOnSuccess {
+                if (it.isEmpty())
+                    throw EmptyDishesError()
+            }
 
 
-    override fun findDishesByName(searchText: String): Observable<List<DishEntity>> =
-        repository.getCachedDishes().toObservable()
+    override fun findDishesByName(searchText: String): Observable<List<DishEntity>> {
+        val single = repository.findDishesByName(searchText)
+        return single
             .map { dishes ->
                 dishes.filter {
-                    it.title.toLowerCase(Locale.ROOT).contains(searchText.trim().toLowerCase(Locale.ROOT))
+                    it.title.toLowerCase(Locale.ROOT)
+                        .contains(searchText.trim().toLowerCase(Locale.ROOT))
                 }
             }
+            .doAfterNext {
+                if (it.isEmpty())
+                    throw EmptyDishesError()
+            }
+    }
 }

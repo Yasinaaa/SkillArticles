@@ -9,6 +9,10 @@ import ru.skillbranch.sbdelivery.repository.database.entity.DishPersistEntity
 
 @Dao
 interface DishesDao {
+
+    @Query("SELECT * FROM dishes_table WHERE name LIKE :searchText ORDER BY name")
+    fun findDishesByName(searchText: String): Single<List<DishPersistEntity>>
+
     @Query("SELECT * FROM dishes_table")
     fun getAllDishes(): Single<List<DishPersistEntity>>
 

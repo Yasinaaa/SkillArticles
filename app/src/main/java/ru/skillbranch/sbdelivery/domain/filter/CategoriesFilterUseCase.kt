@@ -10,10 +10,6 @@ class CategoriesFilterUseCase(private val repository: DishesRepositoryContract) 
     override fun categoryFilterDishes(categoryId: String): Single<List<DishEntity>> =
         repository.getCachedDishes()
             .map { categories ->
-
-                if (categories.isEmpty())
-                    throw EmptyDishesError()
-
                 if (categoryId.isNotEmpty()) {
                     categories.filter {
                         it.categoryId == categoryId
@@ -21,5 +17,8 @@ class CategoriesFilterUseCase(private val repository: DishesRepositoryContract) 
                 }else{
                     categories
                 }
+            }.doOnSuccess {
+                if (it.isEmpty())
+                    throw EmptyDishesError()
             }
 }
